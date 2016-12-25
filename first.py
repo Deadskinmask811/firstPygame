@@ -1,12 +1,13 @@
 # simple test to draw a rectangle to the screen that can be moved within but not out of the
 # bounds of the screen
-import pygame, sys
+import pygame, sys, random
 from pygame.locals import *
 
 WINDOWHEIGHT = 500
 WINDOWWIDTH = 500
 PLAYERSIZE = 30
 PLAYERMOVERATE = 10
+POOPSIZE = 50
 FPS = 40
 BACKGROUNDCOLOR = (0,0,0)
 
@@ -19,6 +20,10 @@ pygame.display.set_caption('My First Pygame')
 playerImage = pygame.image.load('player.png')
 playerRect = pygame.Rect(0, 0, PLAYERSIZE, PLAYERSIZE)
 moveLeft = moveUp = moveRight = moveDown = False
+score = 0
+# set up enemy
+poopImage = pygame.image.load('poop.png')
+poopRect = pygame.Rect(random.randint(0, WINDOWWIDTH - POOPSIZE), random.randint(0, WINDOWHEIGHT - POOPSIZE), POOPSIZE, POOPSIZE)
 while True:
     for event in pygame.event.get():
         if event.type == QUIT:
@@ -61,10 +66,17 @@ while True:
         playerRect.move_ip(-1 * PLAYERMOVERATE, 0)
     if moveUp and playerRect.top > 0:
         playerRect.move_ip(0, -1 * PLAYERMOVERATE)
-    
+
+    if playerRect.colliderect(poopRect):
+        poopRect.move_ip(random.randint(0, WINDOWWIDTH - POOPSIZE), random.randint(0, WINDOWHEIGHT - POOPSIZE))
+        score += 1
+        print(score)
+        print("poop moved to: %s, %s" %(poopRect.top, poopRect.left))
+
     
     windowSurface.fill(BACKGROUNDCOLOR)
-
     windowSurface.blit(playerImage, playerRect)
+    windowSurface.blit(poopImage, poopRect)
+
     pygame.display.update()
     mainClock.tick(FPS)
