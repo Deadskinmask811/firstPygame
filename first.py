@@ -7,7 +7,7 @@ WINDOWHEIGHT = 500
 WINDOWWIDTH = 500
 PLAYERSIZE = 30
 PLAYERMOVERATE = 10
-POOPSIZE = 50
+POOPSIZE = 30
 FPS = 40
 BACKGROUNDCOLOR = (0,0,0)
 
@@ -18,11 +18,12 @@ pygame.display.set_caption('My First Pygame')
 
 # set up player
 playerImage = pygame.image.load('player.png')
-playerRect = pygame.Rect(0, 0, PLAYERSIZE, PLAYERSIZE)
+playerRect = playerImage.get_rect() 
 moveLeft = moveUp = moveRight = moveDown = False
 score = 0
 # set up enemy
 poopImage = pygame.image.load('poop.png')
+poopImage = pygame.transform.scale(poopImage, (30, 30))
 poopRect = pygame.Rect(random.randint(0, WINDOWWIDTH - POOPSIZE), random.randint(0, WINDOWHEIGHT - POOPSIZE), POOPSIZE, POOPSIZE)
 while True:
     for event in pygame.event.get():
@@ -68,7 +69,7 @@ while True:
         playerRect.move_ip(0, -1 * PLAYERMOVERATE)
 
     if playerRect.colliderect(poopRect):
-        poopRect.move_ip(random.randint(0, WINDOWWIDTH - POOPSIZE), random.randint(0, WINDOWHEIGHT - POOPSIZE))
+        poopRect = pygame.Rect(random.randint(0, WINDOWWIDTH - POOPSIZE), random.randint(0, WINDOWHEIGHT - POOPSIZE), POOPSIZE, POOPSIZE)
         score += 1
         print(score)
         print("poop moved to: %s, %s" %(poopRect.top, poopRect.left))
