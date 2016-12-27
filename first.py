@@ -9,6 +9,9 @@ PLAYERSIZE = 30
 PLAYERMOVERATE = 10
 POOPSIZE = 30
 ADDNEWPOOPRATE = 30
+ADDNEWSOAPRATE = 300
+SOAPWIDTH = 46
+SOAPHEIGHT = 24
 
 FPS = 40
 BACKGROUNDCOLOR = (0,0,0)
@@ -48,15 +51,21 @@ playerImage = pygame.image.load('player.png')
 playerRect = playerImage.get_rect() 
 moveLeft = moveUp = moveRight = moveDown = False
 
-# set up enemy
+# set up poops 
 poopImage = pygame.image.load('poop.png')
 poopImage = pygame.transform.scale(poopImage, (30, 30))
 poopRect = pygame.Rect(random.randint(0, WINDOWWIDTH - POOPSIZE), random.randint(0, WINDOWHEIGHT - POOPSIZE), POOPSIZE, POOPSIZE)
+
+# set up soaps
+soapImage = pygame.image.load('soap.png')
+soapRect = soapImage.get_rect()
 
 while True: # main menu loop
  
     addNewPoop = 0
     poopList = []
+    addNewSoap = 0
+    soapList = []
     score = 0
 
     windowSurface.fill(BACKGROUNDCOLOR)
@@ -71,21 +80,22 @@ while True: # main menu loop
     while True:
 
         addNewPoop += 1
+        addNewSoap += 1
 
         for event in pygame.event.get():
             if event.type == QUIT:
                 terminate() 
             if event.type == KEYDOWN:
-                if event.key == K_RIGHT:
+                if event.key == K_RIGHT or event.key == ord('d'):
                     moveLeft = False
                     moveRight = True
-                if event.key == K_DOWN:
+                if event.key == K_DOWN or event.key == ord('s'):
                     moveUp = False
                     moveDown = True
-                if event.key == K_LEFT:
+                if event.key == K_LEFT or event.key == ord('a'):
                     moveRight = False
                     moveLeft = True
-                if event.key == K_UP:
+                if event.key == K_UP or event.key == ord('w'):
                     moveDown = False
                     moveUp = True
 
@@ -93,13 +103,13 @@ while True: # main menu loop
                 if event.key == K_ESCAPE:
                     pygame.quit()
                     sys.exit
-                if event.key == K_RIGHT:
+                if event.key == K_RIGHT or event.key == ord('d'):
                     moveRight = False
-                if event.key == K_DOWN:
+                if event.key == K_DOWN or event.key == ord('s'):
                     moveDown = False
-                if event.key == K_LEFT:
+                if event.key == K_LEFT or event.key == ord('a'):
                     moveLeft = False
-                if event.key == K_UP:
+                if event.key == K_UP or event.key == ord('w'):
                     moveUp = False
         
         # move character 
@@ -113,24 +123,40 @@ while True: # main menu loop
             playerRect.move_ip(0, -1 * PLAYERMOVERATE)
 
 
-        # MUST CHANGE THIS CODE TO REFLECT CHANGES WITH ADDING NEW POOPS
+        # check collission for player and all poop in list
         for poop in poopList[:]:
             if playerRect.colliderect(poop['rect']):
-                score += 1
+                score += 5
                 poopList.remove(poop)
 
-           
+        for soap in soapList[:]:
+            if playerRect.colliderect(soap['rect']):
+                score -= 10
+                soapList.remove(soap)
+
+        # spawns new poop   
         if addNewPoop == ADDNEWPOOPRATE:
             addNewPoop = 0
             newPoop = {'rect': pygame.Rect(random.randint(0, WINDOWWIDTH - POOPSIZE), random.randint(0, WINDOWHEIGHT - POOPSIZE), POOPSIZE, POOPSIZE),
                     'surface': poopImage}
             poopList.append(newPoop)
 
+        # spawns new soap
+        if addNewSoap == ADDNEWSOAPRATE:
+            addNewSoap = 0
+            newSoap = {'rect': pygame.Rect(random.randint(0, WINDOWWIDTH - SOAPWIDTH), random.randint(0, WINDOWHEIGHT - SOAPHEIGHT), SOAPWIDTH, SOAPHEIGHT),
+                    'surface': soapImage}
+            soapList.append(newSoap)
+
+        # draw info to screen
         windowSurface.fill(BACKGROUNDCOLOR)
         windowSurface.blit(playerImage, playerRect)
 
         for p in poopList:
             windowSurface.blit(p['surface'], p['rect'])
+
+        for s in soapList:
+            windowSurface.blit(s['surface'], s['rect'])
 
         drawText("SCORE: %s" %(score), WHITE, 10, 10, windowSurface)
         
