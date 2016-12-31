@@ -12,17 +12,19 @@ PLAYERSIZE = 30
 PLAYERMOVERATE = 11 
 
 BOSSSIZE = 75
-BOSSHP = 1000 
+BOSSHP = 10 
 
 BULLETSIZE = 5
 BULLETSPEED = 13
 BULLETDMG = 1
+
 POOPSIZE = 30
 ADDNEWPOOPRATE = 250
 
 SOAPWIDTH = 46
 SOAPHEIGHT = 24
 ADDNEWSOAPRATE = 7 
+
 
 def terminate():
     pygame.quit()
@@ -62,17 +64,18 @@ def shoot(direction, surface):
 
     surface.blit(bulletImage, newBullet['rect']) 
     
-def isBossAlive(bossHp):
+def isBossDead(bossHp):
     if bossHp <= 0:
-        return False
+        return True 
     else:
-        return True
+        return False 
     
 def hasPlayerHit(playerRect, harmList):
     for harm in harmList:
         if playerRect.colliderect(harm['rect']):
             return True
     return False
+
 
 # setting up pygame and window
 pygame.init()
@@ -81,21 +84,26 @@ windowSurface = pygame.display.set_mode((WINDOWHEIGHT, WINDOWWIDTH))
 pygame.display.set_caption('My First Pygame')
 font = pygame.font.SysFont(None, 22)
 
-isAlive = True
+
+score = 0
 
 # set up player
 playerImage = pygame.image.load('player.png')
 playerRect = pygame.Rect(0, 0, 30, 30) 
+playerRect.topleft = ((WINDOWWIDTH / 2) - (playerRect.width / 2), (WINDOWHEIGHT / 2) - (playerRect.height / 2)) 
 moveLeft = moveUp = moveRight = moveDown = False
+playerIsAlive = True
 
 # set up boss
 bossImage = pygame.image.load('mrclean.jpg')
 bossRect = pygame.Rect(((WINDOWWIDTH / 2) - BOSSSIZE / 2), 0, BOSSSIZE, BOSSSIZE)
 bossImage = pygame.transform.scale(bossImage, (BOSSSIZE, BOSSSIZE))
+bossIsAlive = True
 
 # set up bullets for player to shoot
 bulletImage = pygame.image.load('bullet.png')
 shootLeft = shootUp = shootRight = shootDown = False
+
 # set up poops 
 poopImage = pygame.image.load('poop.png')
 poopImage = pygame.transform.scale(poopImage, (30, 30))
@@ -105,22 +113,19 @@ soapImage = pygame.image.load('soap.png')
 soapRect = soapImage.get_rect()
 
 while True: # main menu loop
- 
     bulletList = []
     addNewPoop = 0
     poopList = []
     addNewSoap = 0
     soapList = []
-    score = 0
     bossHp = BOSSHP
-
+    
+    # Main screen
     windowSurface.fill(BACKGROUNDCOLOR)
     drawText("POOPER SCOOPER", WHITE, (WINDOWWIDTH / 3), (WINDOWHEIGHT / 3), windowSurface)
     drawText("PRESS ANY KEY TO START...", WHITE, (WINDOWWIDTH / 3) - 30, (WINDOWHEIGHT / 3) + 30, windowSurface)
     pygame.display.update()
-
     waitForInput()
-    playerRect.topleft = ((WINDOWWIDTH / 2) - (playerRect.width / 2), (WINDOWHEIGHT / 2) - (playerRect.height / 2)) 
 
     # game loop
     while True:
@@ -203,7 +208,7 @@ while True: # main menu loop
             playerRect.move_ip(0, -1 * PLAYERMOVERATE)
 
 
-                # spawns new poop   
+        # spawns new poop   
         if addNewPoop == ADDNEWPOOPRATE:
             addNewPoop = 0
             newPoop = {'rect': pygame.Rect(random.randint(0, WINDOWWIDTH - POOPSIZE), random.randint(0, WINDOWHEIGHT - POOPSIZE) , POOPSIZE, POOPSIZE),
@@ -255,15 +260,8 @@ while True: # main menu loop
 
         # check collission for player and soaps
         if hasPlayerHit(playerRect, soapList):
-            score = 0
-            moveRight = False
-            moveDown = False
-            moveLeft = False
-            moveUp = False
-            shootRight = False
-            shootDown = False
-            shootLeft = False
-            shootUp = False
+            print('player hit something')
+            playerIsAlive = False
             break
         
         # check collission for player and all poop in list
@@ -283,10 +281,11 @@ while True: # main menu loop
             if b['rect'].colliderect(bossRect):
                 bulletList.remove(b)
                 bossHp -= BULLETDMG
-                print(bossHp)
-                if not isBossAlive(bossHp):
-                    print('You win!')
 
+        if isBossDead(bossHp):
+            bossIsAlive = False
+            break
+        
         # draw info to screen
         windowSurface.fill(BACKGROUNDCOLOR)
         windowSurface.blit(playerImage, playerRect)
@@ -306,9 +305,29 @@ while True: # main menu loop
         mainClock.tick(FPS)
 
     # Death screen
-    windowSurface.fill(BACKGROUNDCOLOR)
-    drawText('YOU DIED', WHITE, WINDOWWIDTH / 3, WINDOWHEIGHT / 3 - 20, windowSurface)
-    drawText('Press any key to continue, or ESC to quit', WHITE, WINDOWWIDTH / 3, WINDOWHEIGHT / 3 + 20, windowSurface)
+    if not playerIsAlive:
+        windowSurface.fill(BACKGROUNDCOLOR)
+        drawText('YOU DIED', WHITE, WINDOWWIDTH / 3, WINDOWHEIGHT / 3 - 20, windowSurface)
+        drawText('Press any key to continue, or ESC to quit', WHITE, WINDOWWIDTH / 3, WINDOWHEIGHT / 3 + 20, windowSurface)
+     
+    # Victory Screen
+    if not bossIsAlive:
+        windowSurface.fill(BACKGROUNDCOLOR)
+        drawText('YOU WIN', WHITE, WINDOWWIDTH / 3, WINDOWHEIGHT / 3 - 20, windowSurface)
+        drawText('Press any key to play again, or ESC to quit', WHITE, WINDOWWIDTH / 3, WINDOWHEIGHT / 3 + 20, windowSurface)
+
     pygame.display.update()
     waitForInput()
-    
+
+    print('resetting player')
+    score = 0
+    moveRight = False
+    moveDown = False
+    moveLeft = False
+    moveUp = False
+    shootRight = False
+    shootDown = False
+    shootLeft = False
+    shootUp = False
+    playerIsAlive = True 
+    bossIsAlive = True
