@@ -13,6 +13,7 @@ PLAYERMOVERATE = 11
 
 BOSSSIZE = 75
 BOSSHP = 10 
+BOSSMOVERATE = 5
 
 BULLETSIZE = 5
 BULLETSPEED = 13
@@ -84,7 +85,6 @@ windowSurface = pygame.display.set_mode((WINDOWHEIGHT, WINDOWWIDTH))
 pygame.display.set_caption('My First Pygame')
 font = pygame.font.SysFont(None, 22)
 
-
 score = 0
 
 # set up player
@@ -98,6 +98,7 @@ playerIsAlive = True
 bossImage = pygame.image.load('mrclean.jpg')
 bossRect = pygame.Rect(((WINDOWWIDTH / 2) - BOSSSIZE / 2), 0, BOSSSIZE, BOSSSIZE)
 bossImage = pygame.transform.scale(bossImage, (BOSSSIZE, BOSSSIZE))
+bossMoveLeft = bossMoveRight = False
 bossIsAlive = True
 
 # set up bullets for player to shoot
@@ -119,6 +120,7 @@ while True: # main menu loop
     addNewSoap = 0
     soapList = []
     bossHp = BOSSHP
+    bossMoveRight = True
     
     # Main screen
     windowSurface.fill(BACKGROUNDCOLOR)
@@ -207,6 +209,20 @@ while True: # main menu loop
         if moveUp and playerRect.top > 0:
             playerRect.move_ip(0, -1 * PLAYERMOVERATE)
 
+        # move the BOSS, initial implementation will be a slow movement from right to left until dead.
+        if bossMoveRight == True:
+            if bossRect.right < WINDOWWIDTH:
+                bossRect.move_ip(BOSSMOVERATE, 0)
+            else:
+                bossMoveRight = False
+                bossMoveLeft = True
+        if bossMoveLeft == True:
+            if bossRect.left > 0:
+                bossRect.move_ip(-1 * BOSSMOVERATE, 0)
+            else:
+                bossMoveLeft = False
+                bossMoveRight = True
+
 
         # spawns new poop   
         if addNewPoop == ADDNEWPOOPRATE:
@@ -285,6 +301,7 @@ while True: # main menu loop
         if isBossDead(bossHp):
             bossIsAlive = False
             break
+
         
         # draw info to screen
         windowSurface.fill(BACKGROUNDCOLOR)
@@ -300,9 +317,11 @@ while True: # main menu loop
         for s in soapList:
             windowSurface.blit(s['surface'], s['rect'])
 
+
         drawText("SCORE: %s" %(score), WHITE, 10, 10, windowSurface)
         pygame.display.update()
         mainClock.tick(FPS)
+
 
     # Death screen
     if not playerIsAlive:
@@ -316,10 +335,11 @@ while True: # main menu loop
         drawText('YOU WIN', WHITE, WINDOWWIDTH / 3, WINDOWHEIGHT / 3 - 20, windowSurface)
         drawText('Press any key to play again, or ESC to quit', WHITE, WINDOWWIDTH / 3, WINDOWHEIGHT / 3 + 20, windowSurface)
 
+
     pygame.display.update()
     waitForInput()
-
-    print('resetting player')
+    
+    # resetting game state
     score = 0
     moveRight = False
     moveDown = False
@@ -328,6 +348,13 @@ while True: # main menu loop
     shootRight = False
     shootDown = False
     shootLeft = False
+    bossMoveLeft = False
+    bossMoveRight = False
     shootUp = False
     playerIsAlive = True 
     bossIsAlive = True
+    bossRect.topleft = ((WINDOWWIDTH / 2) - bossRect.width / 2, 0)
+    playerRect.topleft = ((WINDOWWIDTH / 2) - playerRect.width / 2, (WINDOWHEIGHT / 2) - playerRect.height / 2)
+
+
+
