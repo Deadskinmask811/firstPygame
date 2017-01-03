@@ -6,7 +6,7 @@ WINDOWWIDTH = 750
 FPS = 30
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-BACKGROUNDCOLOR = (BLACK) # black
+BACKGROUNDCOLOR = (BLACK) 
 
 PLAYERSIZE = 30
 PLAYERMOVERATE = 11 
@@ -50,7 +50,7 @@ def waitForInput():
                     terminate()
                 return
 
-def shoot(direction, surface):
+def shoot(direction):
     newBullet = {'rect': pygame.Rect(playerRect.centerx, playerRect.centery, BULLETSIZE, BULLETSIZE),
             'surface': bulletImage,
             'speed': BULLETSPEED,
@@ -66,8 +66,15 @@ def shoot(direction, surface):
     if direction == 'UP':
         newBullet['direction'] = 'UP'
 
-    surface.blit(bulletImage, newBullet['rect']) 
+    windowSurface.blit(bulletImage, newBullet['rect']) 
     
+def bossNormalShoot():
+    newBossAttack = {'rect': pygame.Rect(bossRect.centerx - BOSSATTACKSIZE, bossRect.bottom, BOSSATTACKSIZE, BOSSATTACKSIZE),
+                    'surface': bossAttackImage,
+                    'speed': BOSSATTACKSPEED}
+    bossAttacksList.append(newBossAttack)
+
+
 def isBossDead(bossHp):
     if bossHp <= 0:
         return True 
@@ -235,11 +242,8 @@ while True: # main menu loop
         # boss attack if possible
         if bossIsShooting == BOSSFIRERATE:
             bossIsShooting = 0
-            newBossAttack = {'rect': pygame.Rect(bossRect.centerx - BOSSATTACKSIZE, bossRect.bottom, BOSSATTACKSIZE, BOSSATTACKSIZE),
-                    'surface': bossAttackImage,
-                    'speed': BOSSATTACKSPEED}
-            bossAttacksList.append(newBossAttack)
-
+            bossNormalShoot()
+           
         # move boss attacks if they exist
         for b in bossAttacksList:
             b['rect'].move_ip(0, b['speed'])
@@ -262,13 +266,13 @@ while True: # main menu loop
 
         # spawn bullets
         if shootRight:
-            shoot('RIGHT', windowSurface)
+            shoot('RIGHT')
         if shootDown:
-            shoot('DOWN', windowSurface)
+            shoot('DOWN')
         if shootLeft:
-            shoot('LEFT', windowSurface)
+            shoot('LEFT')
         if shootUp:
-            shoot('UP', windowSurface)
+            shoot('UP')
 
         # move bullets
         for b in bulletList:
@@ -295,6 +299,8 @@ while True: # main menu loop
         # move soaps
         for soap in soapList:
             soap['rect'].move_ip(0, 5)
+            if soap['rect'].top > WINDOWHEIGHT:
+                soapList.remove(soap)
 
         # check collission for player and soaps
         if hasPlayerHit(playerRect, soapList):
@@ -312,8 +318,13 @@ while True: # main menu loop
             if playerRect.colliderect(poop['rect']):
                 score += 500
                 poopList.remove(poop)
+
+        # check collission for player and boss
+        if playerRect.colliderect(bossRect):
+            playerIsAlive = False
+            break
                 
-                # check collission for bullets and soaps
+        # check collission for bullets and soaps
         for soap in soapList[:]:
             for bullet in bulletList[:]:
                 if soap['rect'].colliderect(bullet['rect']):
@@ -372,6 +383,7 @@ while True: # main menu loop
     
     # resetting game state
     score = 0
+    
     moveRight = False
     moveDown = False
     moveLeft = False
