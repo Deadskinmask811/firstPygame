@@ -4,16 +4,19 @@ from pygame.locals import *
 WINDOWHEIGHT = 750 
 WINDOWWIDTH = 750 
 FPS = 30
-BACKGROUNDCOLOR = (0,0,0)
 WHITE = (255, 255, 255)
-
+BLACK = (0, 0, 0)
+BACKGROUNDCOLOR = (BLACK) # black
 
 PLAYERSIZE = 30
 PLAYERMOVERATE = 11 
 
 BOSSSIZE = 75
-BOSSHP = 10 
-BOSSMOVERATE = 5
+BOSSHP = 30 
+BOSSMOVERATE = 5 
+BOSSFIRERATE = 50 
+BOSSATTACKSIZE = 90 
+BOSSATTACKSPEED = 15 
 
 BULLETSIZE = 5
 BULLETSPEED = 13
@@ -82,7 +85,7 @@ def hasPlayerHit(playerRect, harmList):
 pygame.init()
 mainClock = pygame.time.Clock()
 windowSurface = pygame.display.set_mode((WINDOWHEIGHT, WINDOWWIDTH))
-pygame.display.set_caption('My First Pygame')
+pygame.display.set_caption('I don\'t even')
 font = pygame.font.SysFont(None, 22)
 
 score = 0
@@ -100,6 +103,9 @@ bossRect = pygame.Rect(((WINDOWWIDTH / 2) - BOSSSIZE / 2), 0, BOSSSIZE, BOSSSIZE
 bossImage = pygame.transform.scale(bossImage, (BOSSSIZE, BOSSSIZE))
 bossMoveLeft = bossMoveRight = False
 bossIsAlive = True
+bossAttackImage = pygame.image.load('bossAttack.png')
+
+bossAttackImage = pygame.transform.scale(bossAttackImage, (BOSSATTACKSIZE, BOSSATTACKSIZE))
 
 # set up bullets for player to shoot
 bulletImage = pygame.image.load('bullet.png')
@@ -115,16 +121,18 @@ soapRect = soapImage.get_rect()
 
 while True: # main menu loop
     bulletList = []
-    addNewPoop = 0
+    addNewPoop = 0 # when this equals ADDNEWPOOPRATE, add a new poop and reset to 0
     poopList = []
-    addNewSoap = 0
+    addNewSoap = 0 # when this equals ADDNEWSOAPRATE, add a new soap and reset to 0
     soapList = []
     bossHp = BOSSHP
     bossMoveRight = True
+    bossIsShooting = 0 # when this equals BOSSFIRERATE the boss fires and gets reset to 0
+    bossAttacksList = []
     
     # Main screen
     windowSurface.fill(BACKGROUNDCOLOR)
-    drawText("POOPER SCOOPER", WHITE, (WINDOWWIDTH / 3), (WINDOWHEIGHT / 3), windowSurface)
+    drawText("Kill the thing with the stuff", WHITE, (WINDOWWIDTH / 3), (WINDOWHEIGHT / 3), windowSurface)
     drawText("PRESS ANY KEY TO START...", WHITE, (WINDOWWIDTH / 3) - 30, (WINDOWHEIGHT / 3) + 30, windowSurface)
     pygame.display.update()
     waitForInput()
@@ -134,6 +142,7 @@ while True: # main menu loop
 
         addNewPoop += 1
         addNewSoap += 1
+        bossIsShooting += 1
 
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -223,6 +232,19 @@ while True: # main menu loop
                 bossMoveLeft = False
                 bossMoveRight = True
 
+        # boss attack if possible
+        if bossIsShooting == BOSSFIRERATE:
+            bossIsShooting = 0
+            newBossAttack = {'rect': pygame.Rect(bossRect.centerx - BOSSATTACKSIZE, bossRect.bottom, BOSSATTACKSIZE, BOSSATTACKSIZE),
+                    'surface': bossAttackImage,
+                    'speed': BOSSATTACKSPEED}
+            bossAttacksList.append(newBossAttack)
+
+        # move boss attacks if they exist
+        for b in bossAttacksList:
+            b['rect'].move_ip(0, b['speed'])
+            if b['rect'].centerx + 100 > WINDOWHEIGHT:
+                bossAttacksList.remove(b)
 
         # spawns new poop   
         if addNewPoop == ADDNEWPOOPRATE:
@@ -279,14 +301,19 @@ while True: # main menu loop
             print('player hit something')
             playerIsAlive = False
             break
+
+        # check collission for player and boss attacks
+        if hasPlayerHit(playerRect, bossAttacksList):
+            playerIsAlive = False
+            break
         
         # check collission for player and all poop in list
         for poop in poopList[:]:
             if playerRect.colliderect(poop['rect']):
                 score += 500
                 poopList.remove(poop)
-
-        # check collission for bullets and soaps
+                
+                # check collission for bullets and soaps
         for soap in soapList[:]:
             for bullet in bulletList[:]:
                 if soap['rect'].colliderect(bullet['rect']):
@@ -297,6 +324,7 @@ while True: # main menu loop
             if b['rect'].colliderect(bossRect):
                 bulletList.remove(b)
                 bossHp -= BULLETDMG
+                score += 1
 
         if isBossDead(bossHp):
             bossIsAlive = False
@@ -317,6 +345,8 @@ while True: # main menu loop
         for s in soapList:
             windowSurface.blit(s['surface'], s['rect'])
 
+        for b in bossAttacksList:
+            windowSurface.blit(b['surface'], b['rect'])
 
         drawText("SCORE: %s" %(score), WHITE, 10, 10, windowSurface)
         pygame.display.update()
@@ -337,6 +367,7 @@ while True: # main menu loop
 
 
     pygame.display.update()
+    pygame.time.delay(1000)
     waitForInput()
     
     # resetting game state
@@ -355,6 +386,3 @@ while True: # main menu loop
     bossIsAlive = True
     bossRect.topleft = ((WINDOWWIDTH / 2) - bossRect.width / 2, 0)
     playerRect.topleft = ((WINDOWWIDTH / 2) - playerRect.width / 2, (WINDOWHEIGHT / 2) - playerRect.height / 2)
-
-
-
